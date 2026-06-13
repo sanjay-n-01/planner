@@ -1,0 +1,6 @@
+{
+  "name": "Sanjay Planner",
+  "description": "Sanjay's mobile dashboard for daily focus, backlog, roadmap, and GATE preparation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

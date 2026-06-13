@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-brand-purple: #6366f1;
+  --color-brand-cyan: #0ea5e9;
+  --color-brand-emerald: #10b981;
+  --color-brand-amber: #f59e0b;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #fafbfc;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.035) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Premium micro-scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.18);
+}
+
+/* Hide scrollbars for navbar and other slider modules */
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-none {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}

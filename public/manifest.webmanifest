@@ -1,0 +1,18 @@
+{
+  "name": "Sanjay Planner",
+  "short_name": "Planner",
+  "description": "Sanjay's mobile dashboard for daily focus, backlog, roadmap, and GATE preparation.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#070A12",
+  "theme_color": "#070A12",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
