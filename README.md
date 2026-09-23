@@ -1,20 +1,55 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Planner
 
-# Run and deploy your AI Studio app
+Planner is a React/Vite frontend backed by an Express and MongoDB Atlas API. It stores one single-user application state document; there is no authentication or user account system.
 
-This contains everything you need to run your app locally.
+## Structure
 
-View your app in AI Studio: https://ai.studio/apps/be974181-9eec-4f95-afeb-b9155c570628
+```text
+planner/
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── .env
+│   ├── index.html
+│   ├── package.json
+│   └── package-lock.json
+└── backend/
+    ├── src/
+    ├── .env
+    ├── package.json
+    └── package-lock.json
+```
 
-## Run Locally
+## Run locally
 
-**Prerequisites:**  Node.js
+Configure `frontend/.env`:
 
+```env
+VITE_API_URL=http://localhost:5000/api
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Configure `backend/.env` using `backend/.env.example`:
+
+```env
+PORT=5000
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>/<database>
+FRONTEND_ORIGIN=http://localhost:3000
+```
+
+Start the backend in one terminal:
+
+```text
+cd backend
+npm install
+npm start
+```
+
+Start the frontend in a second terminal:
+
+```text
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend uses `GET /api/state` on startup and debounced `PUT /api/state` saves. It keeps localStorage as an offline fallback cache.
