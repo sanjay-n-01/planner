@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { getState, saveState } from './services/api.js';
 import {
   CheckCircle2,
   Target,
@@ -98,6 +99,7 @@ interface AppState {
 
 // --- Initial Constants ---
 const LOCAL_STORAGE_KEY = 'sanjay_hybrid_v1';
+const LAST_OPENED_DATE_KEY = 'sanjay_planner_last_opened_date';
 
 const WORKOUT_ROUTINES = [
   ['Rest Day', '🌴 Full rest, recover well, stretch'],
@@ -142,43 +144,44 @@ const DEFAULT_LINUX = [
 
 const DEFAULT_ROADMAP: Record<string, string[]> = {
   y1: [
-    'Clear CCBP 7-week backlog',
-    'Complete IITB Linux course',
-    'Master core Linux commands (ls, cd, grep, awk, chmod...)',
-    'Learn OSI model - all 7 layers',
-    'Learn TCP/IP, DNS, HTTP, SSH fundamentals',
-    'Install & practice Wireshark',
-    'Maintain 9+ CGPA',
-    'Complete IPL ML project (CCBP)',
-    'Set up GitHub profile & push portfolio projects'
+    '[NOW] Wireshark: install, capture your own WiFi traffic 10 min, identify 5 protocols in the list (~30 min, do tonight)',
+    'CCBP: clear backlog — 2-3 hrs/week fixed slot, track weeks-remaining not tasks-remaining',
+    'IITB FOSS Linux: finish remaining modules (~1-2 hrs/week until done)',
+    'Linux commands: ls/cd/grep/awk/chmod/chown/ps/top — practice in your own Kali VM, not tutorials (~3 hrs total, hands-on only)',
+    'OSI model: all 7 layers, able to explain each in your own words without notes (~2 hrs, use a video + write a 1-page summary from memory after)',
+    'TCP/IP + DNS + HTTP + SSH: how each actually works end-to-end, not definitions (~3 hrs, PracticalNetworking.net or NetworkChuck)',
+    'Maintain 9+ CGPA (ongoing, sem 3-4 exams)',
+    'CCBP IPL ML project: already done, just confirm it is documented on GitHub with README',
+    'GitHub: write real READMEs for planner, arcade game, AIPL project — each with what/why/stack/screenshot (~1 hr each)',
+    'Space Apps: deliver your assigned share only, track your own hours separately from team total'
   ],
   y2: [
-    'Start TryHackMe Pre-Security path',
-    'Complete THM: How the Web Works',
-    'Complete THM: Linux Fundamentals 1-3',
-    'Complete THM: Network Fundamentals',
-    'Buy ESP32 + DHT11 sensor (~Rs 350-580)',
-    'ESP32 Project 1: Sensor -> serial monitor',
-    'ESP32 Project 2: Sensor -> MQTT over WiFi',
-    'ESP32 Project 3: Live dashboard (React/HTML)',
-    'Learn Modbus TCP basics',
-    'Run ModRSsim2 + pymodbus Python script'
+    'ML foundations: pick ONE course today (Andrew Ng Coursera or fast.ai, not both) and set a finish date, not "eventually"',
+    'TryHackMe Pre-Security path: How the Web Works, Linux Fundamentals 1-3, Network Fundamentals (~1 room/week)',
+    'Buy ESP32 + DHT11 (~Rs 350-580) — order this week, do not let procurement become a delay excuse',
+    'ESP32 Project 1: sensor reading to serial monitor (~2-3 hrs, first hardware win)',
+    'ESP32 Project 2: sensor data over MQTT/WiFi (~4-5 hrs, this is the actual IoT skill)',
+    'ESP32 Project 3: live dashboard showing the sensor stream (~4-5 hrs, reuse React skills from planner)',
+    'ML + OT crossover: run basic anomaly detection on your own ESP32 sensor data (~5-6 hrs) — this is your differentiator project, not a toy',
+    'Modbus TCP basics: read how the protocol frames work before touching code (~2 hrs)',
+    'ModRSsim2 + pymodbus: simulate a PLC, read/write registers with a Python script (~3-4 hrs)'
   ],
   y3: [
-    'Simulate MITM attack on MQTT (Wireshark/mitmproxy)',
-    'Replay attack simulation on ESP32 commands',
-    'Secure MQTT with TLS/SSL',
-    'Add JWT auth to backend API',
-    'Document all attacks + fixes on GitHub',
-    'Study CompTIA Security+ (Prof Messer - free)',
-    'Study ISA/IEC 62443 awareness',
-    '5 portfolio projects live on GitHub'
+    'MITM simulation on MQTT (Wireshark/mitmproxy) — document the attack and the traffic capture',
+    'Replay attack simulation on ESP32 commands — show before/after with and without protection',
+    "Secure MQTT with TLS/SSL — implement it, don't just read about it",
+    'JWT auth on your backend API — this is legitimate here, it\'s a security-topic exercise, not scope creep',
+    'Document every attack + fix as a GitHub writeup — this is your portfolio, not just practice',
+    'CompTIA Security+ (Prof Messer, free) — treat as certification-track, not casual watching',
+    'ISA/IEC 62443 awareness — read the standard structure, know what it governs',
+    'GATE deep-dive: Control Systems, Signals & Systems, Network Theory, EDC, Engineering Math — structured, weekly',
+    '5 portfolio projects live on GitHub, each with a real README'
   ],
   y4: [
     'Apply to Siemens India internship',
     'Apply to Schneider Electric internship',
     'Apply to ABB / Honeywell',
-    'Prepare IoT/OT security interview pitch',
+    'Build a specific IoT/OT security interview pitch — 5 min, your own projects as evidence',
     'Target: Rs 10-18 LPA at Tier 1 (Siemens/ABB)'
   ]
 };
@@ -251,30 +254,8 @@ const getPrerenderedState = (): AppState => {
 };
 
 export default function App() {
-  const [state, setState] = useState<AppState>(() => {
-    try {
-      const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (raw) {
-        const loaded = JSON.parse(raw);
-        // Deep validate fields
-        loaded.today = loaded.today || [];
-        loaded.backlog = loaded.backlog || [];
-        loaded.roadmap = loaded.roadmap || {};
-        ['y1', 'y2', 'y3', 'y4'].forEach(y => {
-          loaded.roadmap[y] = loaded.roadmap[y] || [];
-        });
-        loaded.notes = loaded.notes || [];
-        loaded.subjects = loaded.subjects || [];
-        loaded.scores = loaded.scores || [];
-        loaded.restore = loaded.restore || [];
-        loaded.settings = loaded.settings || { rollover: false, lastOpen: getLocalDayString() };
-        return loaded;
-      }
-    } catch (e) {
-      console.warn('Could not parse localStorage state, generating fresh', e);
-    }
-    return getPrerenderedState();
-  });
+  const [state, setState] = useState<AppState>(getPrerenderedState);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Active tab selection
   const [activeTab, setActiveTab] = useState<'today' | 'backlog' | 'roadmap' | 'notes' | 'gate' | 'restore' | 'data'>('today');
@@ -314,6 +295,96 @@ export default function App() {
     }, 3200);
   };
 
+  const normalizeState = (loaded: Partial<AppState>): AppState => ({
+    ...getPrerenderedState(),
+    ...loaded,
+    today: loaded.today || [],
+    backlog: loaded.backlog || [],
+    roadmap: Object.fromEntries(
+      Object.entries(getPrerenderedState().roadmap).map(([year, defaults]) => {
+        const savedItems = loaded.roadmap?.[year] || [];
+        const savedTitles = new Set(savedItems.map(item => item.title));
+        const missingItems = defaults.filter(item => !savedTitles.has(item.title));
+        return [year, [...savedItems, ...missingItems]];
+      })
+    ),
+    notes: loaded.notes || [],
+    subjects: loaded.subjects || [],
+    scores: loaded.scores || [],
+    restore: loaded.restore || [],
+    settings: loaded.settings || { rollover: false, lastOpen: getLocalDayString() }
+  });
+
+  // Load the remote state first, using the local cache only when the API is unavailable.
+  useEffect(() => {
+    getState()
+      .then(remoteState => {
+        const hydratedState = normalizeState(remoteState);
+        setState(hydratedState);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(hydratedState));
+      })
+      .catch(error => {
+        console.warn('Could not load remote state, using local cache', error);
+        try {
+          const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (raw) setState(normalizeState(JSON.parse(raw)));
+        } catch (cacheError) {
+          console.warn('Could not parse local cache, using fresh state', cacheError);
+        }
+      })
+      .finally(() => setIsHydrated(true));
+  }, []);
+
+  // Request permission and check for the daily reminder while this tab is open.
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    let disposed = false;
+    const checkForReminder = () => {
+      const now = new Date();
+      const today = getLocalDayString();
+      const lastOpenedDate = localStorage.getItem(LAST_OPENED_DATE_KEY);
+      const pendingCount = state.today.filter(item => item.status !== 'done').length;
+
+      if (
+        !disposed &&
+        now.getHours() >= 20 &&
+        lastOpenedDate !== today &&
+        pendingCount > 0 &&
+        Notification.permission === 'granted'
+      ) {
+        const body = `${pendingCount} pending task${pendingCount === 1 ? '' : 's'} still need${pendingCount === 1 ? 's' : ''} your attention.`;
+        const registration = navigator.serviceWorker?.controller;
+
+        if (registration) {
+          registration.postMessage({ type: 'TRACKER_CHECK_IN', body });
+        } else {
+          new Notification('Tracker check-in', { body });
+        }
+      }
+
+      localStorage.setItem(LAST_OPENED_DATE_KEY, today);
+    };
+
+    const prepareNotifications = async () => {
+      if (!('Notification' in window)) return;
+
+      if (Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+
+      if (!disposed) checkForReminder();
+    };
+
+    void prepareNotifications();
+    const interval = window.setInterval(checkForReminder, 60_000);
+
+    return () => {
+      disposed = true;
+      window.clearInterval(interval);
+    };
+  }, [isHydrated, state.today]);
+
   // Persist State Helper
   const updateState = (updater: (prev: AppState) => AppState) => {
     setState(prev => {
@@ -324,6 +395,19 @@ export default function App() {
       return updated;
     });
   };
+
+  // Keep the API in sync without sending a request for every local edit.
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    const timeout = window.setTimeout(() => {
+      saveState(state).catch(error => {
+        console.warn('Could not save remote state; local cache remains available', error);
+      });
+    }, 2000);
+
+    return () => window.clearTimeout(timeout);
+  }, [state, isHydrated]);
 
   // Reset confirmations on tab change
   useEffect(() => {
@@ -340,7 +424,7 @@ export default function App() {
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isHydrated]);
 
   // Handle Rollover and Expiry routines once on load
   useEffect(() => {
@@ -541,7 +625,7 @@ export default function App() {
 
     if (cat === 'ccbp') setNewCcbpTitle('');
     else setNewLnxTitle('');
-    triggerToast(`Mapped into ${cat.toUpperCase()}`, '������');
+    triggerToast(`Mapped into ${cat.toUpperCase()}`, '����');
   };
 
   const handleAddCustomBacklogTask = (e: React.FormEvent) => {

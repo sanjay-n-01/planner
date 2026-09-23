@@ -17,3 +17,15 @@ self.addEventListener('fetch', event => {
   // Network only - no caching for now
   event.respondWith(fetch(event.request));
 });
+
+self.addEventListener('message', event => {
+  if (event.data?.type !== 'TRACKER_CHECK_IN') return;
+
+  event.waitUntil(
+    self.registration.showNotification('Tracker check-in', {
+      body: event.data.body,
+      tag: 'tracker-check-in',
+      renotify: true
+    })
+  );
+});
