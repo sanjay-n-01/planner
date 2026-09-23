@@ -203,3 +203,7 @@ This feature is intentionally client-side. It does not use a push server or serv
 - Keep MongoDB credentials in environment variables.
 - Configure `FRONTEND_URL` to the deployed frontend origin in production.
 - Use a restricted MongoDB user and appropriate Atlas network rules.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
